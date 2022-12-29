@@ -1,0 +1,171 @@
+---
+title: "R - Data Visualization of a Pharmaceutical Company"
+author: "ABC"
+date: "2022-11-28"
+---
+
+The objective is to understand the sales trends for one of the leading pharmaceutical company
+
+#Import the packages
+```{r}
+require(magrittr)
+require(dplyr)
+require(ggplot2)
+require(tidyr)
+```
+
+#Import the data
+```{r}
+sales_data = read.csv("SalesData.csv")
+```
+
+#1.	Compare Sales by region for 2016 with 2015 using bar chart
+```{r}
+#1. summarise the data 
+    a1 = sales_data %>% 
+         group_by(Region) %>% 
+         summarise(Tot_Sales2015 = sum(Sales2015) , Tot_Sales2016 = sum(Sales2016))
+    
+    #2. gather the data 
+    a2 = gather(a1, key = Year, value = Total_Sales,2:3)
+    
+    #3. plot the graph 
+    ggplot(a2,aes(x= Region,y= Total_Sales,fill = Year , label = Total_Sales)) + geom_bar(stat = "identity",position = "dodge") + 
+      ggtitle("Comparision of Sales by Region") + geom_text(size = 4)
+```
+
+```{r}
+#Sales in the year 2016 are more than sales in 2015 across aa the regions.
+```
+    
+    
+#2.	Pie charts for sales for each region in 2016
+```{r}
+      #1. summarise the data 
+    b1 = sales_data %>% group_by(Region) %>% summarise(Tot_Sales2016 = sum(Sales2016))
+    View(b1)
+    
+    #2. plot the graph -1 
+        pie(b1$Tot_Sales2016,b1$Region)
+    
+    #3. plot the graph -2
+        b1$percent = round(b1$Tot_Sales2016 / sum(b1$Tot_Sales2016) * 100,2)
+        label1 = paste(b1$Region,":",b1$percent,"%")
+        
+        pie(b1$Tot_Sales2016,label1,col = c("lightskyblue","lightgreen","lightpink"),main = "Sales 2016")
+        
+```        
+        
+
+#3.	Compare sales of 2015 and 2016 with Region and Tiers
+```{r}
+        #1. summarise the data
+        c1 = sales_data %>% group_by(Region,Tier) %>% summarise(Tot_Sales2015 = sum(Sales2015) , Tot_Sales2016 = sum(Sales2016))
+        View(c1)
+        
+        #2. gather the data
+        c2 = gather(c1, key = Year, value = Total_Sales,3:4)
+        View(c2)
+        
+        #3. plot the graph 
+        ggplot(c2,aes(x= Tier,y= Total_Sales,fill = Year )) + geom_bar(stat = "identity",position = "dodge") + 
+        ggtitle("Comparision of Sales by Region and Tier") + facet_wrap(~ Region)
+        
+```
+
+
+#4.	In East region, which state registered a decline in 2016 as compared to 2015?
+```{r}
+        #1. summarise the data
+        d1 = sales_data %>% filter(Region == "East") %>% group_by(State) %>% summarise(Tot_Sales2015 = sum(Sales2015) , Tot_Sales2016 = sum(Sales2016))
+        View(d1)
+        
+        #2. gather the data
+        d2 = gather(d1, key = Year, value = Total_Sales,2:3)
+        View(d2)
+        
+        #3. plot the graph 
+        ggplot(d2,aes(x= State,y= Total_Sales,fill = Year )) + geom_bar(stat = "identity",position = "dodge") + 
+          ggtitle(" For East region - state wise yearly comparison") 
+```
+
+```{r}
+#In East region, NY state decline in 2016 as compared to 2015.
+``` 
+  
+      
+#5.	In all the High tier, which Division saw a decline in number of units sold in 2016 compared to 2015?
+```{r}        
+        #1. summarise the data
+        e1 = sales_data %>% filter(Tier == "High") %>% group_by(Division) %>% summarise(Tot_Units2015 = sum(Units2015) , Tot_Units2016 = sum(Units2016))
+        View(e1)
+        
+        #2. gather the data
+        e2 = gather(e1, key = Year, value = Total_Units,2:3)
+        View(e2)
+        
+        #3. plot the graph 
+        ggplot(e2,aes(x= Division,y= Total_Units,fill = Year )) + geom_bar(stat = "identity",position = "dodge") + 
+          ggtitle(" For High Tier - division wise yearly comparison") + theme(axis.text.x = element_text(angle = 90))
+``` 
+
+    
+#6.	Create a new column Qtr -
+```{r}
+    
+    sales_data$Qtr = ifelse(sales_data$Month == "Jan" | sales_data$Month == "Feb" | sales_data$Month == "Mar" ,"Q1",
+                     ifelse(sales_data$Month == "Apr" | sales_data$Month == "May" | sales_data$Month == "Jun" ,"Q2",  
+                     ifelse(sales_data$Month == "Jul" | sales_data$Month == "Aug" | sales_data$Month == "Sep" ,"Q3" ,"Q4")))    
+    View(sales_data)    
+```     
+
+       
+#7.	Compare Qtr wise sales in 2015 and 2016 in a bar plot
+```{r}    
+    #1. summarise the data
+    f1 = sales_data %>% group_by(Qtr) %>% summarise(Tot_Sales2015 = sum(Sales2015) , Tot_Sales2016 = sum(Sales2016))
+    View(f1)
+    
+    #2. gather the data
+    f2 = gather(f1, key = Year, value = Total_Sales,2:3)
+    View(f2)
+    
+    #3. plot the graph 
+    ggplot(f2,aes(x= Qtr,y= Total_Sales,fill = Year )) + geom_bar(stat = "identity",position = "dodge") + 
+      ggtitle(" Qtr wise sales") 
+```    
+ 
+      
+#8.	Determine the composition of Qtr wise sales in 2015 with regards to all the Tiers in a pie chart.
+#(Draw 4 pie charts representing a Quarter for each Tier)
+```{r}    
+    #1. summarise the data
+    g1_a = sales_data %>% filter(Qtr == "Q1") %>% group_by(Tier) %>% summarise(Tot_Sales2015 = sum(Sales2015))
+    g1_a$percent = round(g1_a$Tot_Sales2015 / sum(g1_a$Tot_Sales2015) * 100,2)
+    label1 = paste(g1_a$Tier,":",g1_a$percent,"%")
+    
+    g1_b = sales_data %>% filter(Qtr == "Q2") %>% group_by(Tier) %>% summarise(Tot_Sales2015 = sum(Sales2015))
+    g1_b$percent = round(g1_b$Tot_Sales2015 / sum(g1_b$Tot_Sales2015) * 100,2)
+    label2 = paste(g1_b$Tier,":",g1_b$percent,"%")
+    
+    g1_c = sales_data %>% filter(Qtr == "Q3") %>% group_by(Tier) %>% summarise(Tot_Sales2015 = sum(Sales2015))
+    g1_c$percent = round(g1_c$Tot_Sales2015 / sum(g1_c$Tot_Sales2015) * 100,2)
+    label3 = paste(g1_c$Tier,":",g1_c$percent,"%")
+    
+    g1_d = sales_data %>% filter(Qtr == "Q4") %>% group_by(Tier) %>% summarise(Tot_Sales2015 = sum(Sales2015))
+    g1_d$percent = round(g1_d$Tot_Sales2015 / sum(g1_d$Tot_Sales2015) * 100,2)
+    label4 = paste(g1_d$Tier,":",g1_d$percent,"%")
+    
+    
+    #ploting them in one sheet
+    par(mfrow = c(2,2))
+    
+    #2. Plot the graph
+    pie(g1_a$Tot_Sales2015,label1,main = "Qtr 1")
+    pie(g1_b$Tot_Sales2015,label2,main = "Qtr 2")
+    pie(g1_c$Tot_Sales2015,label3,main = "Qtr 3")
+    pie(g1_d$Tot_Sales2015,label4,main = "Qtr 4")
+        
+``` 
+    
+    
